@@ -2,20 +2,14 @@ model:
   base_learning_rate: 4.5e-6
   target: taming.models.vqgan.VQModel
   params:
-    #embed_dim: 256
     embed_dim: 256
-    #n_embed: 1024
     n_embed: 1024
     ddconfig:
       double_z: False
-      #z_channels: 256
       z_channels: 256
-      #resolution: 256
       resolution: 256
-      #in_channels: 3
-      in_channels: 3
-      #out_ch: 3
-      out_ch: 3
+      in_channels: 1
+      out_ch: 1
       ch: 128
       ch_mult: [ 1,1,2,2,4]  # num_down = len(ch_mult)-1
       num_res_blocks: 2
@@ -26,7 +20,7 @@ model:
       target: taming.modules.losses.vqperceptual.VQLPIPSWithDiscriminator
       params:
         disc_conditional: False
-        disc_in_channels: 3
+        disc_in_channels: 1
         disc_start: 10000
         disc_weight: 0.8
         codebook_weight: 1.0
@@ -34,17 +28,17 @@ model:
 data:
   target: main.DataModuleFromConfig
   params:
-    batch_size: 1
+    batch_size: 8
     num_workers: 8
     train:
-      target: taming.data.custom.CustomTrain_crop #taming.data.custom.CustomTrain
+      target: taming.data.custom.CustomTrain
       params:
-          image_folder: /home/aurelie/datasets/mvtec_anomaly/screw/train/good
-          size: 1024
+          image_folder: /root/VQGAN_PYTORCH_LIGHTNING/zipper/train/good
+          size: 256
      
     validation:
-      target: taming.data.custom.CustomTest_crop
+      target: taming.data.custom.CustomTest
       params:
-          image_folder: /home/aurelie/datasets/mvtec_anomaly/screw/val
+          image_folder: /root/VQGAN_PYTORCH_LIGHTNING/zipper/val
 
-          size: 1024
+          size: 256

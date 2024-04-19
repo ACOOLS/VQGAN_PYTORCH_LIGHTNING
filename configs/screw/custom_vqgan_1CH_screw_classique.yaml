@@ -35,18 +35,18 @@ data:
   target: main.DataModuleFromConfig
   params:
     batch_size: 8
-    num_workers: 0
+    num_workers: 8
     wrap: False
     train:
       target: taming.data.custom.CustomTrain
       params:
-          image_folder: /home/aurelie/datasets/mvtec_anomaly/screw/train/good
+          image_folder: /root/VQGAN_PYTORCH_LIGHTNING/screw/train/good
           size: 256
      
     validation:
       target: taming.data.custom.CustomTest
       params:
-          image_folder: /home/aurelie/datasets/mvtec_anomaly/screw/val
+          image_folder: /root/VQGAN_PYTORCH_LIGHTNING/screw/val
 
           size: 256
 
@@ -55,5 +55,4 @@ lightning:
   trainer:
     benchmark: True
     gpus: 1
-    precision: 16
     max_epochs : 500

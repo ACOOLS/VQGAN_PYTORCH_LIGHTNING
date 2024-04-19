@@ -9,23 +9,23 @@ model:
           depth: 8
           heads: 12
           mlp_dim: 3072
-          channels: 3
+          channels: 1
     decoder:
           dim: 768
           depth: 8
           heads: 12
           mlp_dim: 3072
-          channels : 3
+          channels : 1
     quantizer:
           embed_dim: 32
-          n_embed: 4096 #8192
+          n_embed: 4096 
           beta: 0.25
 
     lossconfig:
       target: taming.modules.losses.vqperceptual.VQLPIPSWithDiscriminator
       params:
         disc_conditional: False
-        disc_in_channels: 3
+        disc_in_channels: 1
         disc_start: 10000
         disc_weight: 0.8
         codebook_weight: 1.0
@@ -33,17 +33,16 @@ model:
 data:
   target: main.DataModuleFromConfig
   params:
-    batch_size: 1
-    #batch_size: 1
+    batch_size: 8
     num_workers: 8
     train:
-      target: taming.data.custom.CustomTrain_crop 
+      target: taming.data.custom.CustomTrain
       params:
-          image_folder: /home/aurelie/datasets/mvtec_anomaly/wood/train/good
-          size: 1024
+          image_folder: /root/VQGAN_PYTORCH_LIGHTNING/zipper/train/good
+          size: 256
 
     validation:
-      target: taming.data.custom.CustomTest_crop
+      target: taming.data.custom.CustomTest
       params:
-          image_folder: /home/aurelie/datasets/mvtec_anomaly/wood/val
-          size: 1024
+          image_folder: /root/VQGAN_PYTORCH_LIGHTNING/zipper/val
+          size: 256

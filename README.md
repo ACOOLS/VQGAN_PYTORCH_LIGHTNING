@@ -4,8 +4,8 @@ wget -O ".tmux_conf" https://raw.githubusercontent.com/belarbi2733/dotfiles/mast
 tmux source-file .tmux_conf
 ```
 ```bash
-git clone https://github.com/ACOOLS/VQGanomaly-ResNet-CareNet-Vit.git
-cd VQGanomaly-ResNet-CareNet-Vit
+git clone https://github.com/ACOOLS/VQGAN_PYTORCH_LIGHTNING
+cd ACOOLS/VQGAN_PYTORCH_LIGHTNING
 wget https://github.com/ACOOLS/VQGanomaly-ResNet-CareNet-Vit/releases/download/screw/screw_last_version.zip && unzip screw_last_version.zip && rm screw_last_version.zip
 ```
 ```bash
@@ -30,5 +30,5 @@ apt install -y libgl1-mesa-glx
 pip install --upgrade opencv-python
 ```
 ```bash
-python main.py --base configs/custom_vqgan_1CH_screw_classique_vastai.yaml -t --gpus 0,
+python main.py --base configs/screw/custom_vqgan_1CH_screw.yaml -t --gpus 0,
 ```

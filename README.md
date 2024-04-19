@@ -5,7 +5,7 @@ tmux source-file .tmux_conf
 ```
 ```bash
 git clone https://github.com/ACOOLS/VQGAN_PYTORCH_LIGHTNING
-cd ACOOLS/VQGAN_PYTORCH_LIGHTNING
+cd VQGAN_PYTORCH_LIGHTNING
 wget https://github.com/ACOOLS/VQGanomaly-ResNet-CareNet-Vit/releases/download/screw/screw_last_version.zip && unzip screw_last_version.zip && rm screw_last_version.zip
 ```
 ```bash

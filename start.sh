@@ -1,12 +1,16 @@
 #!/bin/bash
 
-# Chemin du répertoire du projet
-PROJECT_DIR="VQGanomaly-ResNet-CareNet-Vit"
+dataset = $1
+config_name = $2
+
+PROJECT_DIR="VQGAN_PYTORCH_LIGHTNING"
+
+
 
 # Vérifier si le répertoire du projet existe déjà
 if [ ! -d "$PROJECT_DIR" ]; then
     # Clone the GitHub repository
-    git clone https://github.com/ACOOLS/VQGanomaly-ResNet-CareNet-Vit.git
+    git clone https://github.com/ACOOLS/VQGAN_PYTORCH_LIGHTNING.git
     cd "$PROJECT_DIR"
 else
     echo "Le répertoire $PROJECT_DIR existe déjà."
@@ -14,41 +18,16 @@ else
 fi
 
 # Vérifier si le dataset existe déjà
-DATASET_ZIP="screw_last_version.zip"
-folder="screw"
+DATASET_ZIP="${dataset}_last_version.zip"
+folder="${dataset}"
 if [ ! -d "$folder" ]; then
-    # Download datasets
-    wget "https://github.com/ACOOLS/VQGanomaly-ResNet-CareNet-Vit/releases/download/screw/$DATASET_ZIP" && unzip "$DATASET_ZIP" && rm "$DATASET_ZIP"
+    # Download dataset
+    wget "https://github.com/ACOOLS/VQGanomaly-ResNet-CareNet-Vit/releases/download/${dataset}/${DATASET_ZIP}" && unzip "$DATASET_ZIP" && rm "$DATASET_ZIP"
 else
     echo "Le répertoire $folder existe déjà."
 fi
 
-DATASET_ZIP="wood_last_Version.zip"
-folder="wood"
-if [ ! -d "$folder" ]; then
-    # Download datasets
-    wget "https://github.com/ACOOLS/VQGanomaly-ResNet-CareNet-Vit/releases/download/wood/$DATASET_ZIP" && unzip "$DATASET_ZIP" && rm "$DATASET_ZIP"
-else
-    echo "Le répertoire $folder existe déjà."
-fi
 
-DATASET_ZIP="breast_dataset_last_version.zip"
-folder="breast_dataset"
-if [ ! -d "$folder" ]; then
-    # Download datasets
-    wget "https://github.com/ACOOLS/VQGanomaly-ResNet-CareNet-Vit/releases/download/breast/$DATASET_ZIP" && unzip "$DATASET_ZIP" && rm "$DATASET_ZIP"
-else
-    echo "Le répertoire $folder existe déjà."
-fi
-
-DATASET_ZIP="brain_mri_last_version.zip"
-folder="brain_mri"
-if [ ! -d "$folder" ]; then
-    # Download datasets
-    wget "https://github.com/ACOOLS/VQGanomaly-ResNet-CareNet-Vit/releases/download/brain/$DATASET_ZIP" && unzip "$DATASET_ZIP" && rm "$DATASET_ZIP"
-else
-    echo "Le répertoire $folder existe déjà."
-fi
 
 # Chemin de l'environnement virtuel
 VENV_PATH="myenv"
@@ -97,36 +76,6 @@ apt install -y libgl1-mesa-glx
 pip install --upgrade opencv-python
 
 
-# update config files to paperspace
-
-
-# Définition des chemins
-FILE="/notebooks/VQGanomaly-ResNet-CareNet-Vit/configs/custom_vqgan_1CH_brainmri_classique.yaml"
-OLD_PATH="/home/aurelie/datasets"
-NEW_PATH="/notebooks/VQGanomaly-ResNet-CareNet-Vit"
-
-# Vérification si le nouveau chemin est déjà utilisé
-if grep -q "$NEW_PATH" "$FILE"; then
-    echo "Le remplacement a déjà été effectué. Aucune action nécessaire."
-else
-    # Exécution de sed pour remplacer l'ancien chemin par le nouveau
-    sed -i "s|$OLD_PATH|$NEW_PATH|g" "$FILE"
-    echo "Chemin mis à jour dans le fichier."
-fi
-
-FILE="/notebooks/VQGanomaly-ResNet-CareNet-Vit/configs/custom_vqgan_1CH_breast_classique.yaml"
-
-# Vérification si le nouveau chemin est déjà utilisé
-if grep -q "$NEW_PATH" "$FILE"; then
-    echo "Le remplacement a déjà été effectué. Aucune action nécessaire."
-else
-    # Exécution de sed pour remplacer l'ancien chemin par le nouveau
-    sed -i "s|$OLD_PATH|$NEW_PATH|g" "$FILE"
-    echo "Chemin mis à jour dans le fichier."
-fi
-
 # TRAIN
+python3 main.py --paperspace --base configs/${dataset}/custom_vqgan_1CH_${dataset}_${config_name}.yaml -t --gpus 0, > ${dataset}_${config_name}.log
 
-python main.py --paperspace --base configs/custom_vqgan_1CH_breast_classique.yaml -t --gpus 0, > reast_classique.logs
-
-python main.py --paperspace --base configs/custom_vqgan_1CH_brainmri_classique.yaml -t --gpus 0, > brainmri_classique.logs

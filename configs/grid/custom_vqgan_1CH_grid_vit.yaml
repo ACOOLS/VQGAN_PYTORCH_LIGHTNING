@@ -2,7 +2,7 @@ model:
   base_learning_rate: 4.5e-6
   target: taming.models.vqgan_vit.VQModel
   params:
-    image_size: 64
+    image_size: 256
     patch_size: 8
     encoder:
           dim: 768

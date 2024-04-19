@@ -35,7 +35,6 @@ class CustomDataset(Dataset):
             transforms.ToTensor()
         ])
         image = to_tensor(image)
-        print("image.shape", image.shape)
 
         return {"image": image }
 

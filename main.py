@@ -14,6 +14,7 @@ import shutil
 import yaml
 import requests
 import logging
+import time
 logging.basicConfig(level=logging.INFO)
 
 class TelegramLogger:
@@ -491,6 +492,7 @@ logger = TelegramLogger(apiToken, chatID)
 
 
 def main():
+    start_time = time.time() 
     torch.cuda.empty_cache()
     # custom parser to specify config files, train, test and debug mode,
     # postfix, resume.
@@ -646,6 +648,7 @@ def main():
 
         # model
         model = instantiate_from_config(config.model)
+        model.config = lightning_config 
         
         
         # trainer and callbacks
@@ -688,14 +691,17 @@ def main():
                 "filename": "{epoch:06}",
                 "verbose": True,
                 "save_last": True,
-            }
+                "monitor": 'val/total_loss',     # La métrique à surveiller pour sauvegarder le 'meilleur' modèle
+                "save_top_k": 1,          # Nombre de meilleurs modèles à sauvegarder (1 signifie seulement le meilleur)
+                "mode": 'min'  
+             }
         }
         # Configuration du ModelCheckpoint
         model_checkpoint_callback = ModelCheckpoint(
-            monitor='val/aeloss_epoch', 
+            monitor='val/total_loss', 
             dirpath=ckptdir,
             filename='{epoch:02d}-{val_aeloss_epoch:.2f}',
-            save_top_k=3,  # Changez ce nombre selon vos besoins
+            save_top_k=1,  # Changez ce nombre selon vos besoins
             save_last=True,
             verbose=True,
             mode='min'
@@ -753,6 +759,16 @@ def main():
         
         #trainer_kwargs["callbacks"] = [instantiate_from_config(callbacks_cfg[k]) for k in callbacks_cfg]
         trainer_kwargs["gpus"] = -1
+
+        # Configurer l'arrêt anticipé
+        early_stopping_cfg = lightning_config.get("early_stopping", OmegaConf.create())
+        early_stopping = instantiate_from_config(early_stopping_cfg)
+        if "callbacks" not in trainer_kwargs:
+            trainer_kwargs["callbacks"] = []
+        trainer_kwargs["callbacks"].append(early_stopping)
+
+
+
         trainer = Trainer.from_argparse_args(trainer_opt, **trainer_kwargs)
 
         # data
@@ -820,6 +836,23 @@ def main():
             dst = os.path.join(dst, "debug_runs", name)
             os.makedirs(os.path.split(dst)[0], exist_ok=True)
             os.rename(logdir, dst)
+    
+    # Code pour arrêter le chronomètre et calculer la durée
+    execution_time = time.time() - start_time  # Temps d'exécution en secondes
+    time_log_path = 'execution_time_log.txt'  # Chemin du fichier de log
+
+    # Enregistrement du temps d'exécution
+    if os.path.exists(time_log_path):
+        with open(time_log_path, 'r+') as file:
+            previous_time = float(file.read().strip())  # Lire le temps précédent
+            new_total_time = previous_time + execution_time  # Ajouter le nouveau temps au total
+            file.seek(0)
+            file.write(f"{new_total_time}\n")  # Écrire le nouveau total
+            file.truncate()
+    else:
+        with open(time_log_path, 'w') as file:
+            file.write(f"{execution_time}\n")  # Écrire le temps d'exécution initial
+
 
 if __name__ == "__main__":
     main()

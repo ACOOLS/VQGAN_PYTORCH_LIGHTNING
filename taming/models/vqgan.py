@@ -3,7 +3,7 @@ import torch.nn.functional as F
 import pytorch_lightning as pl
 import argparse, os, sys, datetime, glob, importlib
 from main import instantiate_from_config
-
+from omegaconf import OmegaConf
 from taming.modules.diffusionmodules.model import Encoder, Decoder
 from taming.modules.vqvae.quantize import VectorQuantizer2 as VectorQuantizer
 from taming.modules.vqvae.quantize import GumbelQuantize
@@ -168,17 +168,46 @@ class VQModel(pl.LightningModule):
         # return self.log_dict_ae, rec_loss.item(), aeloss.item(), discloss.item(), qloss.item()
         return log_dict_ae, log_dict_disc
 
+    def get_trainable_params(self):
+        # Retourne une liste de tous les paramètres que vous souhaitez optimiser
+        return (list(self.encoder.parameters()) +
+                list(self.decoder.parameters()) +
+                list(self.quantize.parameters()) +
+                list(self.quant_conv.parameters()) +
+                list(self.post_quant_conv.parameters()))
+
+
     def configure_optimizers(self):
         lr = self.learning_rate
-        opt_ae = torch.optim.Adam(list(self.encoder.parameters())+
-                                  list(self.decoder.parameters())+
-                                  list(self.quantize.parameters())+
-                                  list(self.quant_conv.parameters())+
-                                  list(self.post_quant_conv.parameters()),
-                                  lr=lr, betas=(0.5, 0.9))
-        opt_disc = torch.optim.Adam(self.loss.discriminator.parameters(),
-                                    lr=lr, betas=(0.5, 0.9))
-        return [opt_ae, opt_disc], []
+        
+        # Création des optimiseurs
+        opt_ae = torch.optim.Adam(list(self.encoder.parameters()) +
+                                list(self.decoder.parameters()) +
+                                list(self.quantize.parameters()) +
+                                list(self.quant_conv.parameters()) +
+                                list(self.post_quant_conv.parameters()), lr=lr, betas=(0.5, 0.9))
+        opt_disc = torch.optim.Adam(self.loss.discriminator.parameters(), lr=lr, betas=(0.5, 0.9))
+        
+        # Chargement et instanciation des configurations de scheduler à partir du YAML
+        lr_scheduler_cfg_ae = self.config.get("lr_scheduler_ae")
+        lr_scheduler_ae = self.instantiate_scheduler(lr_scheduler_cfg_ae, opt_ae) if lr_scheduler_cfg_ae else None
+
+        lr_scheduler_cfg_disc = self.config.get("lr_scheduler_disc")
+        lr_scheduler_disc = self.instantiate_scheduler(lr_scheduler_cfg_disc, opt_disc) if lr_scheduler_cfg_disc else None
+        
+        schedulers = []
+        if lr_scheduler_ae:
+            schedulers.append({'scheduler': lr_scheduler_ae, 'interval': 'epoch', 'monitor': 'val_loss'})
+        if lr_scheduler_disc:
+            schedulers.append({'scheduler': lr_scheduler_disc, 'interval': 'epoch'})
+
+        return [opt_ae, opt_disc], schedulers
+
+    def instantiate_scheduler(self, config, optimizer):
+        module_path, class_name = config['target'].rsplit('.', 1)
+        module = importlib.import_module(module_path)
+        cls = getattr(module, class_name)
+        return cls(optimizer, **config['params'])
 
     def get_last_layer(self):
         return self.decoder.conv_out.weight

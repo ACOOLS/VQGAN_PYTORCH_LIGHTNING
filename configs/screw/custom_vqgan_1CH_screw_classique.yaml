@@ -51,8 +51,28 @@ data:
           size: 256
 
 lightning:
-  
   trainer:
     benchmark: True
     gpus: 1
-    max_epochs : 500
+    max_epochs : 1000
+
+  early_stopping:
+    target: 'pytorch_lightning.callbacks.EarlyStopping'
+    params:
+      monitor: 'val/total_loss'
+      patience: 30
+      verbose: True
+      mode: 'min'
+
+
+  lr_scheduler_ae:
+    target: 'torch.optim.lr_scheduler.StepLR'
+    params:
+      step_size: 10
+      gamma: 0.1
+
+  lr_scheduler_disc:
+    target: 'torch.optim.lr_scheduler.StepLR'
+    params:
+      step_size: 5
+      gamma: 0.1
